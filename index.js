@@ -1,16 +1,18 @@
 //Global Value
-const width = 600;
-const height = 600;
+const width = window.innerWidth;
+const height = window.innerHeight;
 //columns | (vertical)
-const verticalNum = 10;
+const cellsHorizontal = 10;
 //rows - (horizontal)
-const horizontalNum = 10;
-const gridWidth = width / horizontalNum;
-const gridHeight = height / verticalNum;
+const cellsVertical = 6;
+const gridWidth = width / cellsHorizontal;
+const gridHeight = height / cellsVertical;
 
 // For drag able add MouseConstraint and Mouse
-const {Engine, Render, Runner, World, Bodies, Body} = Matter;
+const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 const engine = Engine.create();
+//turn gravity off
+engine.world.gravity.y = 0;
 const {world} = engine;
 
 //create Dom for Matter
@@ -43,17 +45,21 @@ World.add(world, walls);
 
 //Maze container
 //rows
-const grid = Array(horizontalNum).fill(null)
+const grid = Array(cellsVertical).fill(null)
     //columns
-    .map(() => Array(verticalNum).fill(false));
-const verticals = Array(horizontalNum).fill(null).map(() => Array(verticalNum - 1).fill(false));
-const horizontals = Array(horizontalNum - 1).fill(null).map(() => Array(verticalNum).fill(false));
-const startRows = Math.floor(Math.random() * horizontalNum);
-const startColumns = Math.floor(Math.random() * verticalNum);
+    .map(() => Array(cellsHorizontal).fill(false));
+const verticals = Array(cellsVertical).fill(null)
+    .map(() => Array(cellsHorizontal - 1).fill(false));
+const horizontals = Array(cellsVertical - 1).fill(null)
+    .map(() => Array(cellsHorizontal).fill(false));
+
+const startRows = Math.floor(Math.random() * cellsVertical);
+const startColumns = Math.floor(Math.random() * cellsHorizontal);
 
 roadMap(startRows, startColumns);
 
 //draw wall
+
 horizontals.forEach((row, rowIndex) => {
     row.forEach((open, columnIndex) => {
         if (open) {
@@ -65,25 +71,39 @@ horizontals.forEach((row, rowIndex) => {
             gridWidth,
             5,
             {
+                label: 'horizontalWall',
                 isStatic: true,
+                render:{
+                    fillStyle: 'brown',
+                }
             }
         );
         World.add(world, wall);
     });
 });
-verticals.forEach((column, columnIndex) => {
-    column.forEach((open, rowIndex) => {
+/*
+horizontals.forEach((row, rowIndex) => {
+  row.forEach((open, columnIndex) => {
+* */
+
+verticals.forEach((row, rowIndex) => {
+    row.forEach((open, columnIndex) => {
         if (open) {
             return;
         }
 
         const wall = Bodies.rectangle(
-            rowIndex * gridHeight + gridHeight,
-            columnIndex * gridWidth + gridWidth / 2,
+            columnIndex * gridWidth + gridWidth,
+            rowIndex * gridHeight + gridHeight / 2,
             5,
             gridHeight,
-
-            {isStatic: true},
+            {
+                label: 'verticalsWall',
+                isStatic: true,
+                render:{
+                    fillStyle: 'brown',
+                }
+            },
         );
         World.add(world, wall);
     });
@@ -94,30 +114,54 @@ verticals.forEach((column, columnIndex) => {
 
 //goal
 const goal = Bodies.rectangle(width - (gridWidth / 2), height - (gridHeight / 2), gridWidth * 0.7, gridHeight * 0.7,
-    {isStatic: true,}
+    {isStatic: true, label: 'goal',render:{
+            fillStyle: 'green',
+        }}
 );
 World.add(world, goal);
 
 //ball
 //adding object ro Matter World
-const ball = Bodies.circle((gridWidth / 2), (gridHeight / 2), gridWidth * 0.3,);
+const ballRadius = Math.min(gridWidth, gridHeight) / 3;
+const ball = Bodies.circle((gridWidth / 2), (gridHeight / 2), ballRadius, {
+
+    label: 'ball',
+    render:{
+        fillStyle: 'white',
+    }
+});
 World.add(world, ball);
 
 document.addEventListener('keydown', event => {
     const {x, y} = ball.velocity;
     if (event.keyCode === 87 || event.key === 'w' || event.key === 'ArrowUp') {
-        Body.setVelocity(ball , {x,y:y-5})
+        Body.setVelocity(ball, {x, y: y - 5})
     }
-
     if (event.keyCode === 68 || event.key === 'd' || event.key === 'ArrowRight') {
-        Body.setVelocity(ball , {x:x+5,y})
+        Body.setVelocity(ball, {x: x + 5, y})
     }
-
     if (event.keyCode === 83 || event.key === 's' || event.key === 'ArrowDown') {
-        Body.setVelocity(ball , {x,y:y+5})
+        Body.setVelocity(ball, {x, y: y + 5})
     }
-
     if (event.keyCode === 65 || event.key === 'a' || event.key === 'ArrowLeft') {
-        Body.setVelocity(ball , {x:x-5,y})
+        Body.setVelocity(ball, {x: x - 5, y})
     }
+});
+
+//Win
+Events.on(engine, 'collisionStart', event => {
+    event.pairs.forEach(collision => {
+        const labels = ['ball', 'goal'];
+        if (labels.includes(collision.bodyA.label)
+            &&
+            labels.includes(collision.bodyB.label)) {
+            world.gravity.y = 1;
+            alert('you Won');
+            world.bodies.forEach(body => {
+                if (body.label === 'verticalsWall' || body.label === 'horizontalWall') {
+                    Body.setStatic(body, false);
+                }
+            })
+        }
+    });
 });

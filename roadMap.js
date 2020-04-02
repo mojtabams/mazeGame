@@ -22,7 +22,7 @@ const roadMap = (row, column) => {
     for (let neighbor of neighbors) {
         const [nextRow, nextColumn, side] = neighbor;
         //validation to be in grid
-        if (nextRow < 0 || nextRow >= horizontalNum || nextColumn < 0 || nextColumn >= verticalNum) {
+        if (nextRow < 0 || nextRow >= cellsVertical || nextColumn < 0 || nextColumn >= cellsHorizontal) {
             continue;
 
         }
