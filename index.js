@@ -2,14 +2,14 @@
 const width = 600;
 const height = 600;
 //columns | (vertical)
-const verticalNum = 30;
+const verticalNum = 10;
 //rows - (horizontal)
-const horizontalNum = 30;
+const horizontalNum = 10;
 const gridWidth = width / horizontalNum;
 const gridHeight = height / verticalNum;
 
 // For drag able add MouseConstraint and Mouse
-const {Engine, Render, Runner, World, Bodies} = Matter;
+const {Engine, Render, Runner, World, Bodies, Body} = Matter;
 const engine = Engine.create();
 const {world} = engine;
 
@@ -19,7 +19,7 @@ const render = Render.create({
     engine: engine,
     options: {
         // get solid shape and random color
-       // wireframes: false,
+        wireframes: false,
         width,
         height
     }
@@ -28,19 +28,9 @@ const render = Render.create({
 //Running Matter
 Render.run(render);
 Runner.run(Runner.create(), engine);
-
 // For drag able
 /* World.add(world, MouseConstraint.create(engine,{ mouse: Mouse.create(render.canvas)}));  */
 
-//adding object ro Matter World
-const shape = Bodies.rectangle(200, 200, 50, 50, {
-    isStatic: true
-});
-World.add(world, shape);
-
-const shuffle = (array) => {
-    return array.sort(() => Math.random() - 0.5);
-}
 
 //Walls
 const walls = [
@@ -56,62 +46,19 @@ World.add(world, walls);
 const grid = Array(horizontalNum).fill(null)
     //columns
     .map(() => Array(verticalNum).fill(false));
-
 const verticals = Array(horizontalNum).fill(null).map(() => Array(verticalNum - 1).fill(false));
 const horizontals = Array(horizontalNum - 1).fill(null).map(() => Array(verticalNum).fill(false));
 const startRows = Math.floor(Math.random() * horizontalNum);
 const startColumns = Math.floor(Math.random() * verticalNum);
 
-const roadMap = (row, column) => {
-    //visiting cell [row, column]
-    if (grid[row][column]) {
-        return
-    }
-    //mark visited cell (true)
-    grid[row][column] = true;
-    //select random nearby cell
-    const neighbors = shuffle([
-        [row - 1, column, 'up'],
-        [row + 1, column, 'down'],
-        [row, column - 1, 'left'],
-        [row, column + 1, 'right'],
-    ]);
-
-    // validation selected cell and moving
-    for (let neighbor of neighbors) {
-        const [nextRow, nextColumn, side] = neighbor;
-        //validation to be in grid
-        if (nextRow < 0 || nextRow >= horizontalNum || nextColumn < 0 || nextColumn >= verticalNum) {
-            continue;
-
-        }
-        //validation for moving
-        if (grid[nextRow][nextColumn] === true) {
-            continue;
-        }
-        //remove horizontal or vertical
-        if (side === 'up') {
-            horizontals[row - 1][column] = true;
-        } else if (side === 'down') {
-            horizontals[row][column] = true;
-        } else if (side === 'left') {
-            verticals[row][column - 1] = true;
-        } else if (side === 'right') {
-            verticals[row][column] = true;
-        }
-        //visiting cell [row, column]
-        grid[row][column] = true;
-        roadMap(nextRow, nextColumn);
-    }
-};
 roadMap(startRows, startColumns);
 
+//draw wall
 horizontals.forEach((row, rowIndex) => {
     row.forEach((open, columnIndex) => {
         if (open) {
             return;
         }
-
         const wall = Bodies.rectangle(
             columnIndex * gridWidth + gridWidth / 2,
             rowIndex * gridHeight + gridHeight,
@@ -124,7 +71,6 @@ horizontals.forEach((row, rowIndex) => {
         World.add(world, wall);
     });
 });
-
 verticals.forEach((column, columnIndex) => {
     column.forEach((open, rowIndex) => {
         if (open) {
@@ -133,7 +79,7 @@ verticals.forEach((column, columnIndex) => {
 
         const wall = Bodies.rectangle(
             rowIndex * gridHeight + gridHeight,
-            columnIndex * gridWidth + gridWidth/ 2 ,
+            columnIndex * gridWidth + gridWidth / 2,
             5,
             gridHeight,
 
@@ -141,4 +87,37 @@ verticals.forEach((column, columnIndex) => {
         );
         World.add(world, wall);
     });
+});
+
+
+//World.add(world, shape);
+
+//goal
+const goal = Bodies.rectangle(width - (gridWidth / 2), height - (gridHeight / 2), gridWidth * 0.7, gridHeight * 0.7,
+    {isStatic: true,}
+);
+World.add(world, goal);
+
+//ball
+//adding object ro Matter World
+const ball = Bodies.circle((gridWidth / 2), (gridHeight / 2), gridWidth * 0.3,);
+World.add(world, ball);
+
+document.addEventListener('keydown', event => {
+    const {x, y} = ball.velocity;
+    if (event.keyCode === 87 || event.key === 'w' || event.key === 'ArrowUp') {
+        Body.setVelocity(ball , {x,y:y-5})
+    }
+
+    if (event.keyCode === 68 || event.key === 'd' || event.key === 'ArrowRight') {
+        Body.setVelocity(ball , {x:x+5,y})
+    }
+
+    if (event.keyCode === 83 || event.key === 's' || event.key === 'ArrowDown') {
+        Body.setVelocity(ball , {x,y:y+5})
+    }
+
+    if (event.keyCode === 65 || event.key === 'a' || event.key === 'ArrowLeft') {
+        Body.setVelocity(ball , {x:x-5,y})
+    }
 });
