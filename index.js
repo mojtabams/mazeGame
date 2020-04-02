@@ -1,6 +1,11 @@
 //Global Value
 const width = 600;
 const height = 600;
+//columns | (vertical)
+const verticalNum = 3;
+//rows - (horizontal)
+const horizontalNum = 3;
+
 // For drag able add MouseConstraint and Mouse
 const {Engine, Render, Runner, World, Bodies} = Matter;
 const engine = Engine.create();
@@ -39,3 +44,23 @@ const walls = [
     Bodies.rectangle(width, height/2, 40, height, {isStatic: true}),
 ]
 World.add(world, walls);
+
+//Maze container
+//rows
+const grid = Array(horizontalNum)
+    .fill(null)
+    //columns
+    .map(() => Array(verticalNum).fill(false));
+
+const verticals = Array(horizontalNum)
+    .fill(null)
+    //columns
+    .map(() => Array(verticalNum-1).fill(false));
+
+const horizontals = Array(horizontalNum-1)
+    .fill(null)
+    //columns
+    .map(() => Array(verticalNum).fill(false));
+console.log(grid );
+console.log(verticals);
+console.log(horizontals);
