@@ -1,10 +1,10 @@
 //Global Value
 const width = window.innerWidth;
 const height = window.innerHeight;
-//columns | (vertical)
-const cellsHorizontal = 10;
-//rows - (horizontal)
-const cellsVertical = 6;
+//column  number - (horizontal)
+const cellsHorizontal = 3;
+//row number | (vertical)
+const cellsVertical = 4;
 const gridWidth = width / cellsHorizontal;
 const gridHeight = height / cellsVertical;
 
@@ -73,7 +73,7 @@ horizontals.forEach((row, rowIndex) => {
             {
                 label: 'horizontalWall',
                 isStatic: true,
-                render:{
+                render: {
                     fillStyle: 'brown',
                 }
             }
@@ -100,7 +100,7 @@ verticals.forEach((row, rowIndex) => {
             {
                 label: 'verticalsWall',
                 isStatic: true,
-                render:{
+                render: {
                     fillStyle: 'brown',
                 }
             },
@@ -114,9 +114,11 @@ verticals.forEach((row, rowIndex) => {
 
 //goal
 const goal = Bodies.rectangle(width - (gridWidth / 2), height - (gridHeight / 2), gridWidth * 0.7, gridHeight * 0.7,
-    {isStatic: true, label: 'goal',render:{
+    {
+        isStatic: true, label: 'goal', render: {
             fillStyle: 'green',
-        }}
+        }
+    }
 );
 World.add(world, goal);
 
@@ -126,7 +128,7 @@ const ballRadius = Math.min(gridWidth, gridHeight) / 3;
 const ball = Bodies.circle((gridWidth / 2), (gridHeight / 2), ballRadius, {
 
     label: 'ball',
-    render:{
+    render: {
         fillStyle: 'white',
     }
 });
@@ -155,10 +157,13 @@ Events.on(engine, 'collisionStart', event => {
         if (labels.includes(collision.bodyA.label)
             &&
             labels.includes(collision.bodyB.label)) {
+            document.querySelector('.winner').classList.remove('hidden');
             world.gravity.y = 1;
             alert('you Won');
             world.bodies.forEach(body => {
-                if (body.label === 'verticalsWall' || body.label === 'horizontalWall') {
+                if (body.label === 'verticalsWall'
+                    ||
+                    body.label === 'horizontalWall') {
                     Body.setStatic(body, false);
                 }
             })
